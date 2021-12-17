@@ -8,34 +8,9 @@ cimport numpy
 
 #ctypedef numpy.int8_ DTYPE_t
 
-def main(str input, int itterations):
-	cdef str line
-	cdef bint first = True
 
-	cdef str polymer
-	cdef dict rules={}
-	cdef set stuff=set([])
-	for line in open(input):
-		if first:
-			polymer=line.strip()
-			first=False
-			continue
+def solve(polymer,itterations,letters,rules):
 
-		if not "->" in line:
-			continue
-		content=line.strip().split(" -> ")
-		if not content[0][0] in rules:
-			rules[content[0][0]]={}
-		
-		rules[content[0][0]][content[0][1]]=content[1]
-		stuff.add(content[1])
-
-	print(len(stuff))
-
-	print(rules)
-	print()
-	print(polymer)
-	
 	cdef long total_elements=len(polymer)
 	cdef long j
 	for _ in range(0,itterations):
@@ -86,8 +61,62 @@ def main(str input, int itterations):
 	#print(all_elements)
 
 	cdef str l
-	for l in stuff:
+	for l in letters:
 		counts.append(numpy.count_nonzero(all_elements == l ) )
 		
 	print(max(counts)-min(counts))
+	return(counts)
 
+
+def main(str input, int itterations):
+	cdef str line
+	cdef bint first = True
+
+	cdef str polymer
+	cdef dict rules={}
+	cdef set stuff=set([])
+	for line in open(input):
+		if first:
+			polymer=line.strip()
+			first=False
+			continue
+
+		if not "->" in line:
+			continue
+		content=line.strip().split(" -> ")
+		if not content[0][0] in rules:
+			rules[content[0][0]]={}
+		
+		rules[content[0][0]][content[0][1]]=content[1]
+		stuff.add(content[1])
+
+	letters=list(stuff)
+
+	l_to_pos={}
+	for i in range(0,len(letters)):
+		l_to_pos[letters[i]]=i
+
+	print(len(stuff))
+
+	print(rules)
+	print()
+	print(polymer)
+	
+	counts=[]
+	for letter in letters:
+		counts.append(0)
+
+	print(l_to_pos)
+	for i in range(0,len(polymer)-1):
+		counts_new=solve(polymer[i:i+2],itterations,letters,rules)
+
+
+		for j in range(0,len(counts_new)):
+			counts[j]+=counts_new[j]
+		print(counts)
+		counts[ l_to_pos[polymer[i+1]] ]+=-1
+
+	print(max(counts)-min(counts))
+	#counts_new=solve(polymer,itterations,letters,rules)
+	#print(counts_new)
+	#print(max(counts_new)-min(counts_new))
