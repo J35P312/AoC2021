@@ -2,6 +2,7 @@ import numpy
 import math
 import cython
 cimport numpy
+import copy
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -15,16 +16,13 @@ def solve(polymer,itterations,letters,rules):
 	cdef long j
 	for _ in range(0,itterations):
 		total_elements+=(total_elements-1)
-	print(total_elements)
-	
-	
+		
 	#cdef list all_elements=[]
 	small=0
 	#all_elements=[small] * total_elements
 
 	#cdef char all_elements[total_elements]
 	cdef numpy.ndarray all_elements=numpy.zeros(total_elements,dtype='U1')
-	print("hej")
 	all_elements[0]=polymer[0]
 	cdef long i
 	for i in range(1,len(polymer)):
@@ -45,7 +43,7 @@ def solve(polymer,itterations,letters,rules):
 	for j in range(1,itterations+1):
 		elements_current_loop+=(elements_current_loop-1)
 
-		print(j,elements_current_loop,added)
+		#print(j,elements_current_loop,added)
 
 		pow=int(math.pow(2,itterations-(j-1)))
 		for i in range(1,elements_current_loop-added+1):
@@ -60,11 +58,9 @@ def solve(polymer,itterations,letters,rules):
 	counts=[]
 	#print(all_elements)
 
-	cdef str l
-	for l in letters:
-		counts.append(numpy.count_nonzero(all_elements == l ) )
+	for i in range(0,len(letters)):
+		counts.append(numpy.count_nonzero(all_elements == letters[i] ) )
 		
-	print(max(counts)-min(counts))
 	return(counts,all_elements)
 
 
@@ -106,30 +102,39 @@ def main(str input, int it):
 	for letter in letters:
 		counts.append(0)
 
-	if it < 18:
+	if it < 20:
 		counts_new,new_polymer=solve(polymer,it,letters,rules)
 		for j in range(0,len(counts_new)):
 			counts[j]+=counts_new[j]
 
+
 	else:
-		print("hej")
-		counts_new,new_polymer=solve(polymer,15,letters,rules)
-		for j in range(0,len(counts_new)):
-			counts[j]+=counts_new[j]
-		print("test")
+		counts_new,new_polymer=solve(polymer,18,letters,rules)
 
 		new_polymer="".join(list(new_polymer))
-		print(new_polymer)
-		it=it-15
-		print(l_to_pos)
-		for i in range(0,len(polymer)-1):
+		it=it-18
+		analyzed={}
+
+		for i in range(0,len(new_polymer)-1):
+
+			if i != len(new_polymer)-2:
+				counts[ l_to_pos[new_polymer[i+1]] ]+=-1
+
+			if new_polymer[i] in analyzed:
+				if new_polymer[i+1] in analyzed[new_polymer[i]]:
+					for j in range(0,len(counts_new)):
+						counts[j]+=analyzed[new_polymer[i]][new_polymer[i+1]][j]
+					continue
+
 			counts_new,tmp=solve(new_polymer[i:i+2],it,letters,rules)
-
-
 			for j in range(0,len(counts_new)):
 				counts[j]+=counts_new[j]
-			print(counts)
-			counts[ l_to_pos[polymer[i+1]] ]+=-1
+
+			if not new_polymer[i] in analyzed:
+				analyzed[new_polymer[i]]={}
+
+			if not new_polymer[i+1] in analyzed[new_polymer[i]]:
+				analyzed[new_polymer[i]][new_polymer[i+1]]=copy.copy(counts_new)
 
 	print(max(counts)-min(counts))
 	#counts_new=solve(polymer,itterations,letters,rules)
