@@ -65,10 +65,10 @@ def solve(polymer,itterations,letters,rules):
 		counts.append(numpy.count_nonzero(all_elements == l ) )
 		
 	print(max(counts)-min(counts))
-	return(counts)
+	return(counts,all_elements)
 
 
-def main(str input, int itterations):
+def main(str input, int it):
 	cdef str line
 	cdef bint first = True
 
@@ -106,15 +106,30 @@ def main(str input, int itterations):
 	for letter in letters:
 		counts.append(0)
 
-	print(l_to_pos)
-	for i in range(0,len(polymer)-1):
-		counts_new=solve(polymer[i:i+2],itterations,letters,rules)
-
-
+	if it < 18:
+		counts_new,new_polymer=solve(polymer,it,letters,rules)
 		for j in range(0,len(counts_new)):
 			counts[j]+=counts_new[j]
-		print(counts)
-		counts[ l_to_pos[polymer[i+1]] ]+=-1
+
+	else:
+		print("hej")
+		counts_new,new_polymer=solve(polymer,15,letters,rules)
+		for j in range(0,len(counts_new)):
+			counts[j]+=counts_new[j]
+		print("test")
+
+		new_polymer="".join(list(new_polymer))
+		print(new_polymer)
+		it=it-15
+		print(l_to_pos)
+		for i in range(0,len(polymer)-1):
+			counts_new,tmp=solve(new_polymer[i:i+2],it,letters,rules)
+
+
+			for j in range(0,len(counts_new)):
+				counts[j]+=counts_new[j]
+			print(counts)
+			counts[ l_to_pos[polymer[i+1]] ]+=-1
 
 	print(max(counts)-min(counts))
 	#counts_new=solve(polymer,itterations,letters,rules)
